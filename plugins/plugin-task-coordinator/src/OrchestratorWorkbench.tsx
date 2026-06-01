@@ -98,13 +98,13 @@ const STATUS_ICON: Record<TaskStatus, LucideIcon> = {
 const STATUS_TONE: Record<TaskStatus, string> = {
   open: "text-muted",
   active: "text-ok",
-  waiting_on_user: "text-warn",
-  blocked: "text-warn",
-  validating: "text-accent",
+  waiting_on_user: "text-muted-strong",
+  blocked: "text-muted-strong",
+  validating: "text-muted-strong",
   done: "text-ok",
-  failed: "text-danger",
+  failed: "text-red-500",
   archived: "text-muted",
-  interrupted: "text-warn",
+  interrupted: "text-muted-strong",
 };
 
 const STATUS_PULSE: ReadonlySet<TaskStatus> = new Set<TaskStatus>([
@@ -122,8 +122,8 @@ const PRIORITY_ICON: Record<TaskPriority, LucideIcon | null> = {
 const PRIORITY_TONE: Record<TaskPriority, string> = {
   low: "text-muted",
   normal: "",
-  high: "text-warn",
-  urgent: "text-danger",
+  high: "text-muted-strong",
+  urgent: "text-red-500",
 };
 
 const SESSION_ICON: Record<string, LucideIcon> = {
@@ -142,12 +142,12 @@ const SESSION_TONE: Record<string, string> = {
   active: "text-ok",
   running: "text-ok",
   tool_running: "text-ok",
-  blocked: "text-warn",
+  blocked: "text-muted-strong",
   idle: "text-muted",
   completed: "text-ok",
   stopped: "text-muted",
-  error: "text-danger",
-  errored: "text-danger",
+  error: "text-red-500",
+  errored: "text-red-500",
 };
 
 const SESSION_PULSE: ReadonlySet<string> = new Set([
@@ -171,8 +171,8 @@ const VERIFICATION_TONE: Record<
   string
 > = {
   passed: "text-ok",
-  failed: "text-danger",
-  pending: "text-warn",
+  failed: "text-red-500",
+  pending: "text-muted-strong",
   unknown: "text-muted",
 };
 
@@ -193,11 +193,11 @@ const PLAN_STEP_TONE: Record<string, string> = {
   done: "text-ok",
   completed: "text-ok",
   passed: "text-ok",
-  in_progress: "text-accent",
-  active: "text-accent",
-  running: "text-accent",
-  blocked: "text-warn",
-  failed: "text-danger",
+  in_progress: "text-muted-strong",
+  active: "text-muted-strong",
+  running: "text-muted-strong",
+  blocked: "text-muted-strong",
+  failed: "text-red-500",
   pending: "text-muted",
   todo: "text-muted",
 };
@@ -750,7 +750,7 @@ function WorkbenchHeader({
 }) {
   const title = (
     <div className="flex shrink-0 items-center gap-2">
-      <Layers className="h-4 w-4 text-accent" />
+      <Layers className="h-4 w-4 text-muted-strong" />
       <span className="text-sm font-semibold tracking-tight text-txt-strong">
         {t("orchestrator.title", { defaultValue: "Orchestrator" })}
       </span>
@@ -780,7 +780,7 @@ function WorkbenchHeader({
           <HeaderStat
             value={String(status.blockedTaskCount)}
             label="blocked"
-            toneClass="text-warn"
+            toneClass="text-muted-strong"
           />
         </>
       ) : null}
@@ -790,7 +790,7 @@ function WorkbenchHeader({
           <HeaderStat
             value={String(status.validatingTaskCount)}
             label="validating"
-            toneClass="text-accent"
+            toneClass="text-muted-strong"
           />
         </>
       ) : null}
@@ -812,8 +812,6 @@ function WorkbenchHeader({
     >
       <Gauge className="h-3 w-3 text-muted/70" />
       {renderTokens(status.usage, t, locale)}
-      <span className="text-muted/50">·</span>
-      {renderCost(status.usage, t, locale)}
     </span>
   ) : null;
   const pauseAllLabel = t("orchestrator.action.pauseAll", {
@@ -853,9 +851,10 @@ function WorkbenchHeader({
       </Button>
       <Button
         size="sm"
+        variant="ghost"
         disabled={busy}
         onClick={onNewTask}
-        className="h-7 gap-1.5 px-2.5 text-xs-tight font-semibold"
+        className="h-7 gap-1.5 border border-accent/50 px-2.5 text-xs-tight font-semibold text-accent hover:bg-accent/10 hover:text-accent"
         aria-label={newTaskLabel}
         title={newTaskLabel}
         data-testid="orchestrator-new-task"
@@ -957,18 +956,18 @@ function TaskRailItem({
   // the small status glyph. Idle rows are borderless (hover-fill only) so the
   // rail reads as a list, not a stack of boxes.
   const barTone = selected
-    ? "before:bg-accent"
+    ? "before:bg-muted-strong"
     : thread.status === "active"
       ? "before:bg-ok"
       : thread.status === "validating"
-        ? "before:bg-accent"
+        ? "before:bg-muted-strong"
         : thread.status === "blocked" || thread.status === "waiting_on_user"
-          ? "before:bg-warn"
+          ? "before:bg-muted-strong"
           : "before:bg-transparent";
   return (
     <div
       className={`relative rounded-sm transition-colors before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:content-[''] ${barTone} ${
-        selected ? "bg-accent-subtle" : "hover:bg-surface"
+        selected ? "bg-bg-hover" : "hover:bg-surface"
       }`}
       data-testid="orchestrator-task-item"
     >
@@ -987,7 +986,7 @@ function TaskRailItem({
             {thread.title}
           </span>
           {thread.paused ? (
-            <Pause className="h-3 w-3 shrink-0 text-warn" />
+            <Pause className="h-3 w-3 shrink-0 text-muted-strong" />
           ) : null}
           <PriorityGlyph priority={thread.priority} t={t} />
         </div>
@@ -1036,7 +1035,7 @@ function SubAgentCard({
             type="button"
             disabled={busy}
             onClick={() => onStop(session.sessionId)}
-            className="flex items-center gap-0.5 rounded px-1 py-0.5 text-2xs text-muted transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
+            className="flex items-center gap-0.5 rounded px-1 py-0.5 text-2xs text-muted transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
             data-testid="orchestrator-stop-agent"
             aria-label={t("orchestrator.action.stopAgent", {
               defaultValue: "Stop agent",
@@ -1051,7 +1050,9 @@ function SubAgentCard({
       ) : null}
       <div className="mt-0.5 flex items-center gap-2 text-2xs text-muted">
         {session.activeTool ? (
-          <span className="truncate text-warn">{session.activeTool}</span>
+          <span className="truncate text-muted-strong">
+            {session.activeTool}
+          </span>
         ) : null}
         <span className="ml-auto tabular-nums">
           {formatTokenCount(session.usageState, session.totalTokens, t, locale)}
@@ -1112,10 +1113,11 @@ function AcceptanceSection({
       <ul className="space-y-1">
         {criteria.map((criterion, index) => (
           <li
+            // biome-ignore lint/suspicious/noArrayIndexKey: criteria strings may repeat, so index disambiguates the composite key
             key={`${criterion}-${index}`}
             className="flex items-start gap-1.5 text-xs-tight text-txt"
           >
-            <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
+            <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-muted" />
             <span>{criterion}</span>
           </li>
         ))}
@@ -1213,7 +1215,7 @@ function UsageSection({
 }
 
 const FIELD_CLASS =
-  "w-full rounded-sm border border-border bg-bg px-2.5 py-1.5 text-xs text-txt outline-none transition-colors placeholder:text-muted focus:border-accent focus:ring-1 focus:ring-accent/30";
+  "w-full rounded-sm border border-border bg-bg px-2.5 py-1.5 text-xs text-txt outline-none transition-colors placeholder:text-muted focus:border-muted-strong focus:ring-1 focus:ring-muted-strong/30";
 
 function FieldLabel({ children }: { children: ReactNode }) {
   return (
@@ -1508,7 +1510,7 @@ function ControlButton({
       title={label}
       className={`flex items-center justify-center rounded-md border border-border/50 p-1.5 transition-colors disabled:opacity-50 ${
         tone === "danger"
-          ? "text-muted hover:bg-danger/10 hover:text-danger"
+          ? "text-muted hover:bg-red-500/10 hover:text-red-500"
           : "text-muted hover:bg-bg-hover/60 hover:text-txt"
       }`}
       data-testid={testId}
@@ -1868,7 +1870,7 @@ function TimelineHeader({
   });
   const pausedBadge = detail.paused ? (
     <span
-      className="inline-flex shrink-0 text-warn"
+      className="inline-flex shrink-0 text-muted-strong"
       title={pausedLabel}
       aria-label={pausedLabel}
       role="img"
@@ -1920,9 +1922,36 @@ function TimelineHeader({
       {statusDot}
       {title}
       {pausedBadge}
+      <button
+        type="button"
+        onClick={onOpenInspector}
+        className="ml-auto shrink-0 rounded-md p-1 text-muted transition-colors hover:bg-bg-hover/60 hover:text-txt"
+        aria-label={detailsLabel}
+        title={detailsLabel}
+        data-testid="orchestrator-open-inspector"
+      >
+        <PanelRightOpen className="h-4 w-4" aria-hidden />
+      </button>
     </div>
   );
 }
+
+// base.css still routes --bg-accent/--bg-hover/--bg-muted/--ring/--focus/--info/
+// --link through --brand-blue (the de-blued theme.css is dormant). The design
+// rule is no-blue, so neutralize those tokens scoped to this view — mode-safe,
+// derived from the foreground (the Codex foreground-ramp approach), never hex.
+// A global base.css fix belongs in a separate packages/ui change.
+const ORCHESTRATOR_THEME: CSSProperties & Record<`--${string}`, string> = {
+  "--bg-accent": "color-mix(in srgb, var(--txt) 4%, transparent)",
+  "--bg-hover": "color-mix(in srgb, var(--txt) 6%, transparent)",
+  "--bg-muted": "color-mix(in srgb, var(--txt) 9%, transparent)",
+  "--ring": "color-mix(in srgb, var(--txt) 32%, transparent)",
+  "--focus": "color-mix(in srgb, var(--txt) 12%, transparent)",
+  "--status-info-bg": "color-mix(in srgb, var(--txt) 6%, transparent)",
+  "--info": "var(--muted-strong)",
+  "--link-color": "var(--text-strong)",
+  "--link-hover-color": "var(--accent)",
+};
 
 export function OrchestratorWorkbench() {
   const app = useApp() as ReturnType<typeof useApp> | undefined;
@@ -2138,6 +2167,9 @@ export function OrchestratorWorkbench() {
       cursor: messageCursor,
       limit: TIMELINE_PAGE_LIMIT,
     });
+    // The selection may have moved on during the await — don't merge task A's
+    // history into task B (mirrors the fetchDetail guard).
+    if (current !== selectedIdRef.current) return;
     setMessages((prev) => mergeById(prev, page.items));
     setMessageCursor(page.nextCursor);
   }, [messageCursor]);
@@ -2297,6 +2329,7 @@ export function OrchestratorWorkbench() {
   return (
     <div
       className="relative flex h-full min-h-0 w-full flex-col bg-bg text-txt"
+      style={ORCHESTRATOR_THEME}
       data-testid="orchestrator-workbench"
     >
       <span data-view-state={viewState} hidden />
@@ -2314,12 +2347,12 @@ export function OrchestratorWorkbench() {
       />
 
       {loadError ? (
-        <div className="border-b border-danger/30 bg-danger/10 px-3 py-1.5 text-xs text-danger">
+        <div className="border-b border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-500">
           {loadError}
         </div>
       ) : null}
       {actionError ? (
-        <div className="border-b border-danger/30 bg-danger/10 px-3 py-1.5 text-xs text-danger">
+        <div className="border-b border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-500">
           {actionError}
         </div>
       ) : null}
@@ -2366,11 +2399,14 @@ export function OrchestratorWorkbench() {
           <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2">
             {tasks.length === 0 ? (
               loading ? (
-                <p className="p-2 text-xs text-muted">
-                  {t("orchestrator.loadingTasks", {
-                    defaultValue: "Loading tasks…",
-                  })}
-                </p>
+                <div className="space-y-1.5 p-1" aria-hidden>
+                  {["a", "b", "c", "d"].map((id) => (
+                    <div
+                      key={id}
+                      className="h-12 animate-pulse rounded-md border border-border/30 bg-bg-accent/30"
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 px-3 py-10 text-center">
                   <Activity className="h-7 w-7 text-muted/50" />
@@ -2381,8 +2417,9 @@ export function OrchestratorWorkbench() {
                   </p>
                   <Button
                     size="sm"
+                    variant="ghost"
                     onClick={() => setCreateOpen(true)}
-                    className="h-7 gap-1.5 px-2.5 text-xs-tight font-semibold"
+                    className="h-7 gap-1.5 border border-accent/50 px-2.5 text-xs-tight font-semibold text-accent hover:bg-accent/10 hover:text-accent"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {t("orchestrator.action.newTask", {
@@ -2421,13 +2458,13 @@ export function OrchestratorWorkbench() {
                 detail={detail}
                 isMobile={isMobile}
                 onBack={() => setSelectedId(null)}
-                onOpenInspector={() => setInspectorOpen(true)}
+                onOpenInspector={() => setInspectorOpen((prev) => !prev)}
                 t={t}
               />
               <div
                 ref={listRef}
                 onScroll={handleListScroll}
-                className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4"
+                className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
                 data-testid="orchestrator-message-list"
               >
                 {messageCursor ? (
@@ -2452,22 +2489,48 @@ export function OrchestratorWorkbench() {
                     })}
                   </p>
                 ) : (
-                  conversation.map((block) => (
-                    <ConversationBlockView
-                      key={block.key}
-                      block={block}
-                      locale={locale}
-                    />
-                  ))
+                  conversation.map((block, index) => {
+                    // Two-tier rhythm: a tool/notice clings to the agent turn
+                    // it belongs to (tight), while a real turn boundary (a new
+                    // user/agent turn, or the agent's first action after the
+                    // user) gets a wide gap. One flat space-y read as a stack
+                    // of disconnected boxes.
+                    const prevKind = conversation[index - 1]?.kind;
+                    const withinTurn =
+                      (block.kind === "tool" || block.kind === "notice") &&
+                      (prevKind === "agent" ||
+                        prevKind === "tool" ||
+                        prevKind === "notice");
+                    return (
+                      <div
+                        key={block.key}
+                        className={
+                          !prevKind ? "" : withinTurn ? "mt-1.5" : "mt-5"
+                        }
+                      >
+                        <ConversationBlockView block={block} locale={locale} />
+                      </div>
+                    );
+                  })
                 )}
+                {detail.activeSessionCount > 0 ? (
+                  // A faint shimmer at the tail, where the next message forms —
+                  // an in-place "responding" cue (the footer bar shows the
+                  // session count; this shows the response is coming).
+                  <div
+                    className="mt-5 h-2.5 w-2/3 animate-pulse rounded bg-bg-accent/40"
+                    data-testid="orchestrator-streaming"
+                    aria-hidden
+                  />
+                ) : null}
               </div>
               {detail.activeSessionCount > 0 ? (
                 <div
-                  className="flex items-center justify-between gap-2 border-t border-border/50 bg-warn/5 px-3 py-1.5"
+                  className="flex items-center justify-between gap-2 border-t border-border/50 px-3 py-1.5"
                   data-testid="orchestrator-running-bar"
                 >
-                  <span className="flex items-center gap-1.5 text-2xs font-medium text-warn">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warn" />
+                  <span className="flex items-center gap-1.5 text-2xs font-medium text-muted-strong">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-strong" />
                     {t("orchestrator.agentsWorking", {
                       defaultValue: "Agent working…",
                     })}
@@ -2476,7 +2539,7 @@ export function OrchestratorWorkbench() {
                     type="button"
                     onClick={handleStopActive}
                     disabled={mutating}
-                    className="flex items-center gap-1 rounded-md border border-border/60 px-2 py-0.5 text-2xs text-txt transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-md border border-border/60 px-2 py-0.5 text-2xs text-txt transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
                     data-testid="orchestrator-stop-active"
                   >
                     <CircleStop className="h-3 w-3" />
@@ -2545,18 +2608,25 @@ export function OrchestratorWorkbench() {
                   </span>
                 </div>
               ) : null}
-              <div className="flex flex-1 items-center justify-center p-6">
-                <p className="text-xs text-muted">
-                  {t("orchestrator.loadingTask", {
-                    defaultValue: "Loading task…",
-                  })}
-                </p>
+              <div
+                role="status"
+                className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4"
+                aria-label={t("orchestrator.loadingTask", {
+                  defaultValue: "Loading task…",
+                })}
+              >
+                {["a", "b", "c"].map((id) => (
+                  <div key={id} className="space-y-1.5" aria-hidden>
+                    <div className="h-3 w-24 animate-pulse rounded bg-bg-accent/40" />
+                    <div className="h-16 animate-pulse rounded-md border border-border/30 bg-bg-accent/25" />
+                  </div>
+                ))}
               </div>
             </>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-accent-subtle">
-                <Layers className="h-6 w-6 text-accent" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-bg-hover">
+                <Layers className="h-6 w-6 text-muted-strong" />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-txt-strong">
@@ -2596,7 +2666,7 @@ export function OrchestratorWorkbench() {
             data-testid="orchestrator-inspector-backdrop"
           />
         ) : null}
-        {detail ? (
+        {detail && (isMobile || inspectorOpen) ? (
           <TaskInspector
             detail={detail}
             className={isMobile ? "flex" : "flex w-80"}
@@ -2625,12 +2695,23 @@ export function OrchestratorWorkbench() {
             onReopen={() =>
               runMutation(() => client.reopenCodingAgentTaskThread(detail.id))
             }
-            onDelete={() =>
+            onDelete={() => {
+              // Destructive + irreversible — never delete (a possibly-running)
+              // task and its transcript on a single stray click.
+              const confirmed =
+                typeof window === "undefined" ||
+                window.confirm(
+                  t("orchestrator.confirmDelete", {
+                    defaultValue:
+                      "Delete this task and its transcript? This can't be undone.",
+                  }),
+                );
+              if (!confirmed) return;
               runMutation(async () => {
                 await client.deleteOrchestratorTask(detail.id);
                 setSelectedId(null);
-              })
-            }
+              });
+            }}
             onFork={() =>
               runMutation(async () => {
                 const forked = await client.forkOrchestratorTask(detail.id);
