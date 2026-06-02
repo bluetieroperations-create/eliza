@@ -3667,8 +3667,9 @@ export class AgentRuntime implements IAgentRuntime {
 				Object.assign(aggregatedStateValues, providerResult.values);
 			}
 		}
+		const providersToGetNames = new Set(providersToGet.map((p) => p.name));
 		for (const providerName in currentProviderResults) {
-			if (!providersToGet.some((p) => p.name === providerName)) {
+			if (!providersToGetNames.has(providerName)) {
 				const providerResult = currentProviderResults[providerName];
 				if (
 					providerResult?.values &&
