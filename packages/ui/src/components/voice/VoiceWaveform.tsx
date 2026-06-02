@@ -577,7 +577,20 @@ export function VoiceWaveform({
     };
   }, [captureMic, mode]);
 
+  // Defer the WebGPU/three.js orb until voice is actually engaged at least once.
+  // The voice pill lives on the main screen and renders in `idle` by default; we
+  // do NOT want the heavy three.js (`import("three/webgpu")` + `three/tsl`,
+  // ~1.6MB) to download and execute just because the pill is on screen. The
+  // poster image below is the light idle default; once the user listens or the
+  // agent responds, we arm the orb and keep it mounted for the rest of the
+  // session so subsequent turns stay reactive.
+  const [orbArmed, setOrbArmed] = React.useState(mode !== "idle");
   React.useEffect(() => {
+    if (mode !== "idle") setOrbArmed(true);
+  }, [mode]);
+
+  React.useEffect(() => {
+    if (!orbArmed) return undefined;
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
     if (!wrap || !canvas || !gpuAvailable()) return undefined;
@@ -678,7 +691,7 @@ export function VoiceWaveform({
       handle?.dispose();
       handle = null;
     };
-  }, []);
+  }, [orbArmed]);
 
   return (
     <div
