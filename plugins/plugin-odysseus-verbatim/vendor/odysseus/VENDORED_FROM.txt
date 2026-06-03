@@ -1,1 +1,4 @@
-f6b0dcbe58b7745cd6cc8646bcc4b574d279563f
+github.com/pewdiepie-archdaemon/odysseus (MIT)
+static/ vendored byte-for-byte at:
+  ed7956cbd3bb880c2eaa610709e16af882251ff5
+  (ed7956c, origin/main, re-vendored 2026-06-03)
