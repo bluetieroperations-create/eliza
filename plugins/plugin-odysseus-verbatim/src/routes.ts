@@ -63,7 +63,7 @@ const spaEntryRoute: Route = {
   rawPath: true,
   handler: async (req, res): Promise<void> => {
     const httpReq = req as HostRequest;
-    const httpRes = res as ServerResponse;
+    const httpRes = res as unknown as ServerResponse;
     try {
       serveOdysseusSpaEntry(httpReq, httpRes);
     } catch (error) {
@@ -82,7 +82,7 @@ const staticAssetRoute: Route = {
   rawPath: true,
   handler: async (req, res): Promise<void> => {
     const httpReq = req as HostRequest;
-    const httpRes = res as ServerResponse;
+    const httpRes = res as unknown as ServerResponse;
     try {
       serveOdysseusStaticAsset(
         httpReq,
@@ -105,7 +105,7 @@ function buildApiRoute(pathname: string): Route {
     rawPath: true,
     handler: async (req, res): Promise<void> => {
       const httpReq = req as HostRequest;
-      const httpRes = res as ServerResponse;
+      const httpRes = res as unknown as ServerResponse;
       try {
         handleOdysseusApiRequest(httpReq, httpRes, pathname);
       } catch (error) {
