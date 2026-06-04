@@ -12,6 +12,11 @@ import { defineConfig } from "vitest/config";
  * a raised Node heap via `bun run test:integration`.
  */
 export default defineConfig({
+  // Resolve @elizaos/* deps to their built dist (not the `eliza-source` barrels)
+  // — same rationale as the unit config; keeps source-transform bounded.
+  resolve: {
+    conditions: ["node", "import", "default"],
+  },
   test: {
     environment: "node",
     include: ["test/**/*.integration.test.{ts,tsx}"],
