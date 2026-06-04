@@ -6,10 +6,12 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+// Import the action module directly (NOT the package root, which also re-exports
+// the React UI components) so the spec stays as light as the handler graph allows.
 import {
   type CalendarActionDeps,
   createCalendarActionRunner,
-} from "../src/index.js";
+} from "../src/actions/index.js";
 
 function fakeDeps(): CalendarActionDeps {
   return {

@@ -37,6 +37,10 @@ import {
 import { DEFAULT_CALENDAR_REMINDER_STEPS } from "../internal/constants.js";
 import { CalendarServiceError, fail } from "../internal/errors.js";
 import {
+  type AggregatedCalendarFeedSource,
+  mergeAggregatedCalendarFeedEvents,
+} from "../internal/feed-merge.js";
+import {
   accountIdForGrant,
   googleCalendarEventInput,
   googleCalendarEventPatchInput,
@@ -63,14 +67,6 @@ import {
   createLifeOpsAuditEvent,
   createLifeOpsReminderPlan,
 } from "./gate.js";
-
-type AggregatedCalendarFeedSource = {
-  calendar: Pick<
-    LifeOpsCalendarSummary,
-    "accountEmail" | "calendarId" | "grantId" | "summary"
-  >;
-  feed: LifeOpsCalendarFeed;
-};
 
 type AppleCalendarFailure = Extract<FeatureResult<unknown>, { ok: false }>;
 
@@ -157,29 +153,6 @@ function shouldIncludeAppleCalendar(request: {
   if (request.side && request.side !== "owner") return false;
   if (request.grantId && !isAppleCalendarGrant(request.grantId)) return false;
   return true;
-}
-
-export function mergeAggregatedCalendarFeedEvents(
-  sources: readonly AggregatedCalendarFeedSource[],
-): LifeOpsCalendarEvent[] {
-  const dedupedEvents = new Map<string, LifeOpsCalendarEvent>();
-  for (const source of sources) {
-    for (const event of source.feed.events) {
-      if (dedupedEvents.has(event.id)) {
-        continue;
-      }
-      dedupedEvents.set(event.id, {
-        ...event,
-        grantId: event.grantId ?? source.calendar.grantId,
-        accountEmail:
-          event.accountEmail ?? source.calendar.accountEmail ?? undefined,
-        calendarSummary: event.calendarSummary ?? source.calendar.summary,
-      });
-    }
-  }
-  return [...dedupedEvents.values()].sort((a, b) =>
-    a.startAt.localeCompare(b.startAt),
-  );
 }
 
 /**

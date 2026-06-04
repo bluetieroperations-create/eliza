@@ -1,7 +1,8 @@
+export { CalendarService } from "./CalendarService.js";
 export {
-  CalendarService,
+  type AggregatedCalendarFeedSource,
   mergeAggregatedCalendarFeedEvents,
-} from "./CalendarService.js";
+} from "../internal/feed-merge.js";
 export {
   CalendarRepository,
   createLifeOpsCalendarSyncState,

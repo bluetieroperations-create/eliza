@@ -16,7 +16,7 @@ import {
   resolveCalendarEventRange,
   resolveCalendarWindow,
 } from "../src/internal/calendar-normalize.js";
-import { mergeAggregatedCalendarFeedEvents } from "../src/service/CalendarService.js";
+import { mergeAggregatedCalendarFeedEvents } from "../src/internal/feed-merge.js";
 
 function makeEvent(
   overrides: Partial<LifeOpsCalendarEvent> & Pick<LifeOpsCalendarEvent, "id" | "startAt">,
