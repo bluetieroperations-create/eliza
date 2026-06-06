@@ -23,6 +23,16 @@ interface RegistryFile {
 	models: InstalledModel[];
 }
 
+const EXTERNAL_SCAN_CACHE_TTL_MS = 5_000;
+
+let externalScanCache:
+	| {
+			expiresAt: number;
+			models: InstalledModel[];
+	  }
+	| null = null;
+let externalScanPromise: Promise<InstalledModel[]> | null = null;
+
 async function ensureRootDir(): Promise<void> {
 	await fs.mkdir(localInferenceRoot(), { recursive: true });
 }
@@ -51,15 +61,35 @@ async function writeElizaOwned(models: InstalledModel[]): Promise<void> {
 	await fs.rename(tmp, registryPath());
 }
 
+async function scanExternalModelsCached(): Promise<InstalledModel[]> {
+	const now = Date.now();
+	if (externalScanCache && externalScanCache.expiresAt > now) {
+		return externalScanCache.models;
+	}
+	externalScanPromise ??= scanExternalModels()
+		.then((models) => {
+			externalScanCache = {
+				expiresAt: Date.now() + EXTERNAL_SCAN_CACHE_TTL_MS,
+				models,
+			};
+			return models;
+		})
+		.finally(() => {
+			externalScanPromise = null;
+		});
+	return externalScanPromise;
+}
+
 /**
  * Return all models currently usable: persisted Eliza downloads plus a
- * fresh external-tool scan. External duplicates of Eliza-owned files are
- * filtered out by path.
+ * recent external-tool scan. External scans are cached briefly and shared while
+ * in flight because model-hub UI refreshes can arrive in bursts during active
+ * downloads. External duplicates of Eliza-owned files are filtered out by path.
  */
 export async function listInstalledModels(): Promise<InstalledModel[]> {
 	const [ownedRaw, external] = await Promise.all([
 		readElizaOwned(),
-		scanExternalModels(),
+		scanExternalModelsCached(),
 	]);
 	const owned = ownedRaw;
 
