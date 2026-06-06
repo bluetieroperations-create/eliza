@@ -35,7 +35,7 @@ const LEVELS = [
   },
   {
     name: "plugin view lifeops",
-    file: "plugins/plugin-lifeops/src/components/LifeOpsPageView.tsx",
+    file: "plugins/plugin-personal-assistant/src/components/LifeOpsPageView.tsx",
   },
   {
     name: "plugin view messages",
@@ -104,6 +104,10 @@ const LEVELS = [
   {
     name: "plugin view screenshare",
     file: "plugins/plugin-screenshare/src/ui/ScreenshareOperatorSurface.tsx",
+  },
+  {
+    name: "plugin view social alpha",
+    file: "plugins/plugin-social-alpha/src/frontend/LeaderboardView.tsx",
   },
   {
     name: "plugin view task coordinator",
