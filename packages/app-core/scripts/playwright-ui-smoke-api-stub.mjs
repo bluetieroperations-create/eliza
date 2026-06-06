@@ -108,11 +108,11 @@ const smokeViewDeclarations = [
     "HyperliquidTuiView",
     "tui",
   ],
-  ["lifeops", "LifeOps", "plugin-lifeops", "/lifeops", "LifeOpsPageView"],
+  ["lifeops", "LifeOps", "plugin-personal-assistant", "/lifeops", "LifeOpsPageView"],
   [
     "lifeops",
     "LifeOps TUI",
-    "plugin-lifeops",
+    "plugin-personal-assistant",
     "/lifeops/tui",
     "LifeOpsTuiView",
     "tui",
@@ -296,6 +296,13 @@ const smokeViewDeclarations = [
     "tui",
   ],
   [
+    "social-alpha",
+    "Social Alpha",
+    "plugin-social-alpha",
+    "/social-alpha",
+    "SocialAlphaView",
+  ],
+  [
     "task-coordinator",
     "Task Coordinator",
     "plugin-task-coordinator",
@@ -457,7 +464,7 @@ function stubCatalogApp({
 
 const stubCatalogApps = [
   stubCatalogApp({
-    name: "@elizaos/plugin-lifeops",
+    name: "@elizaos/plugin-personal-assistant",
     displayName: "LifeOps",
     description:
       "Run tasks, reminders, calendar, inbox, and connected workflows.",
@@ -5033,6 +5040,19 @@ const server = http.createServer(async (req, res) => {
     // the catch-all 501 the diagnostics guard would otherwise flag.
     await drainRequest(req);
     sendJson(req, res, 200, { suggestions: [] });
+    return;
+  }
+
+  if (
+    req.method === "GET" &&
+    url.pathname === "/api/social-alpha/leaderboard"
+  ) {
+    // Mirror the social-alpha leaderboard route's zero-key behavior
+    // (plugins/plugin-social-alpha/src/routes.ts): with no recommendations
+    // recorded the real route returns an empty data array, and the view
+    // renders its wallet-required / empty state. Returning the same shape
+    // keeps the visual smoke deterministic and avoids the catch-all 501.
+    sendJson(req, res, 200, { data: [] });
     return;
   }
 
