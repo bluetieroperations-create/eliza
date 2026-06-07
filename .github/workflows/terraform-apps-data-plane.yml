@@ -1,0 +1,109 @@
+name: Terraform — Apps Data Plane (Hetzner)
+
+# Plan/apply the Eliza Cloud Apps (Product 2) data-plane IaC
+# (packages/cloud-infra/cloud/terraform/hetzner/apps-data-plane).
+#
+#   pull_request touching the module -> terraform plan (read-only, safe)
+#   workflow_dispatch (manual)        -> terraform apply (DELIBERATE — provisions
+#                                        billed Hetzner infra; never auto-runs)
+#
+# Why manual apply: the module creates real billed servers (an app worker node +
+# a tenant Postgres node). Auto-applying on every develop push would churn/spend,
+# so apply is an explicit operator action — matching "develop = staging" by
+# selecting environment=staging.
+#
+# Required CI secrets (✓ = already present in the repo):
+#   HCLOUD_TOKEN_CI            ✓  Hetzner Cloud API token
+#   CLOUDFLARE_API_TOKEN       ✓  Cloudflare (DNS) API token
+#   CLOUDFLARE_ACCOUNT_ID      ✓  used to build the R2 state endpoint
+#   TF_STATE_R2_ACCESS_KEY_ID  ⚠️ R2 token (AWS_ACCESS_KEY_ID) for remote state — ADD THIS
+#   TF_STATE_R2_SECRET_ACCESS_KEY ⚠️ R2 token secret — ADD THIS
+# Required CI variables:
+#   APPS_CLOUDFLARE_ZONE_ID    Cloudflare zone id for elizacloud.ai
+#   APPS_OPERATOR_SSH_KEY      operator SSH public key allowed onto the nodes
+
+on:
+  pull_request:
+    paths:
+      - "packages/cloud-infra/cloud/terraform/hetzner/apps-data-plane/**"
+      - ".github/workflows/terraform-apps-data-plane.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to apply
+        type: choice
+        default: staging
+        options: [staging, production]
+      action:
+        description: terraform action
+        type: choice
+        default: plan
+        options: [plan, apply]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-apps-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+env:
+  TF_DIR: packages/cloud-infra/cloud/terraform/hetzner/apps-data-plane
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN_CI }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  # R2 (S3-compatible) state backend creds.
+  AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_R2_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_R2_SECRET_ACCESS_KEY }}
+  # Non-secret inputs threaded as TF_VAR_*.
+  TF_VAR_cloudflare_zone_id: ${{ vars.APPS_CLOUDFLARE_ZONE_ID }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+
+      - name: Resolve environment
+        id: env
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          echo "name=$ENV" >> "$GITHUB_OUTPUT"
+          # develop = staging, main = prod (per Stan); PRs always plan staging.
+          echo "state_key=apps-data-plane/$ENV.tfstate" >> "$GITHUB_OUTPUT"
+
+      - name: terraform fmt check
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform fmt -check -recursive
+
+      - name: terraform init (R2 backend)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init \
+            -backend-config="bucket=eliza-terraform-state" \
+            -backend-config="key=${{ steps.env.outputs.state_key }}" \
+            -backend-config="region=auto" \
+            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+            -backend-config="skip_credentials_validation=true" \
+            -backend-config="skip_metadata_api_check=true" \
+            -backend-config="skip_region_validation=true" \
+            -backend-config="use_path_style=true"
+
+      - name: terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_VAR_environment: ${{ steps.env.outputs.name }}
+          TF_VAR_ssh_public_keys: '["${{ vars.APPS_OPERATOR_SSH_KEY }}"]'
+        run: terraform plan -no-color -input=false
+
+      - name: terraform apply
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_VAR_environment: ${{ steps.env.outputs.name }}
+          TF_VAR_ssh_public_keys: '["${{ vars.APPS_OPERATOR_SSH_KEY }}"]'
+        run: terraform apply -auto-approve -input=false
