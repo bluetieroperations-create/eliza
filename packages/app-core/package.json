@@ -214,7 +214,7 @@
     "@elizaos/capacitor-system": "workspace:*",
     "@elizaos/capacitor-talkmode": "workspace:*",
     "@elizaos/capacitor-websiteblocker": "workspace:*",
-    "sharp": "^0.34.5"
+    "sharp": "^0.35.5"
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.0",
@@ -252,7 +252,7 @@
     "jose": "^6.2.2",
     "json5": "^2.2.3",
     "telegraf": "^4.16.3",
-    "undici": "8.2.0",
+    "undici": "8.10.2",
     "ws": "^8.19.0",
     "zod": "^4.4.3"
   },
@@ -269,12 +269,12 @@
     "playwright": "^1.59.1",
     "playwright-core": "^1.58.2",
     "react-test-renderer": "^19.2.4",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.8",
-    "vitest": "^4.0.18",
+    "vitest": "^5.0.2",
     "yaml": "^2.8.4"
   },
   "module": "./dist/index.js",
